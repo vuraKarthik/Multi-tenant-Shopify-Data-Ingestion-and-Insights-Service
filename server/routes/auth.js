@@ -9,23 +9,23 @@ import { testShopifyConnection } from '../services/shopify.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
 
-// Register new tenant
+// Registers the new tenant
 router.post('/register', async (req, res) => {
   try {
     const { email, password, shopDomain, accessToken } = req.body;
 
-    // Validate required fields
+    // Validates the required fields
     if (!email || !password || !shopDomain || !accessToken) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Test Shopify connection
+    // Tests the Shopify connection
     const connectionTest = await testShopifyConnection(shopDomain, accessToken);
     if (!connectionTest.success) {
       return res.status(400).json({ message: 'Failed to connect to Shopify store: ' + connectionTest.error });
     }
 
-    // Check if tenant already exists
+    // Checks if the tenant already exists or not
     const { data: existingTenant } = await supabase
       .from('tenants')
       .select('email')
@@ -40,7 +40,7 @@ router.post('/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create tenant
+    // Creates the tenant
     const tenantId = uuidv4();
     const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
@@ -61,7 +61,7 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ message: 'Failed to create account' });
     }
 
-    // Generate JWT token
+    // Generates the JWT token
     const token = jwt.sign(
       { userId: tenantId, email, tenantId },
       JWT_SECRET,

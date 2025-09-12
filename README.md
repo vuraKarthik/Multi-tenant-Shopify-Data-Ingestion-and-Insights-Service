@@ -2,7 +2,7 @@
 
 A comprehensive multi-tenant Shopify data ingestion and analytics platform built for Forward Deployed Engineer candidates.
 
-## 🚀 Features
+## Features
 
 ### Core Functionality
 - **Multi-tenant Architecture**: Complete data isolation between Shopify stores
@@ -25,14 +25,14 @@ A comprehensive multi-tenant Shopify data ingestion and analytics platform built
 - **Shopify Integration**: REST API v2023-10
 - **Deployment**: Ready for production deployment
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Client  │    │   Express API   │    │   Supabase DB   │
+│   React Client  │    │   Express API   │    │  PostgreSQL DB  │
 │                 │    │                 │    │                 │
 │ - Dashboard     │◄──►│ - Auth Routes   │◄──►│ - Multi-tenant  │
-│ - Auth Forms    │    │ - Data APIs     │    │ - RLS Policies  │
+│ - Auth Forms    │    │ - Data APIs     │    │                 │
 │ - Charts        │    │ - Shopify Sync  │    │ - Optimized     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               ▲
@@ -47,7 +47,7 @@ A comprehensive multi-tenant Shopify data ingestion and analytics platform built
                        └─────────────────┘
 ```
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Tables
 - **tenants**: Store Shopify credentials and shop information
@@ -57,10 +57,9 @@ A comprehensive multi-tenant Shopify data ingestion and analytics platform built
 
 ### Multi-tenancy
 - All data tables include `tenant_id` for isolation
-- Row Level Security (RLS) enforces tenant boundaries
 - Optimized indexes for analytics queries
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -82,14 +81,6 @@ npm install
 ### 3. Environment Configuration
 ```bash
 cp .env.example .env
-```
-
-Fill in your Supabase credentials:
-```env
-SUPABASE_URL=your-supabase-project-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
-JWT_SECRET=your-secure-jwt-secret
-PORT=3001
 ```
 
 ### 4. Shopify Development Store
@@ -153,59 +144,15 @@ The application runs on:
 ## 🛡️ Security Features
 
 - **JWT Authentication**: Secure token-based auth
-- **Row Level Security**: Database-level tenant isolation
 - **Password Hashing**: bcrypt with salt rounds
 - **API Validation**: Input validation and sanitization
-- **CORS Protection**: Configured for secure origins
 
-## 🚀 Production Deployment
-
-### Environment Variables
-```env
-SUPABASE_URL=production-supabase-url
-SUPABASE_ANON_KEY=production-anon-key
-JWT_SECRET=strong-production-secret
-PORT=3001
-```
-
-### Build Process
-```bash
-npm run build
-```
-
-### Deployment Checklist
-- [ ] Database migrations applied
-- [ ] Environment variables configured
-- [ ] Shopify webhook URLs updated
-- [ ] SSL certificates installed
-- [ ] Monitoring configured
 
 ## 📈 Performance Optimizations
 
-- Database indexes on frequently queried columns
 - Efficient date-range filtering
-- Lazy loading for large datasets
 - Optimized SQL queries for analytics
 - Frontend caching strategies
-
-## 🔧 Development Tools
-
-- **ESLint**: Code quality enforcement
-- **TypeScript**: Type safety throughout
-- **Nodemon**: Auto-restart development server
-- **Concurrently**: Run frontend and backend together
-
-## 📚 API Documentation
-
-Detailed API documentation available at `/api/docs` when running in development mode.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## 📄 License
 

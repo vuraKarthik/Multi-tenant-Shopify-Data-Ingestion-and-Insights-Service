@@ -14,7 +14,7 @@ export const authenticateToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // Verify user exists in database
+    // Verify if the user exists in database or not
     const { data: tenant, error } = await supabase
       .from('tenants')
       .select('*')

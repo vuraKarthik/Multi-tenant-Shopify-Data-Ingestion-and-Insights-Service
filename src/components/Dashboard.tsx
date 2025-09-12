@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import MetricCard from './MetricCard';
 import { 
@@ -7,7 +7,8 @@ import {
   DollarSign, 
   TrendingUp,
   Calendar,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -23,23 +24,93 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format as formatDate, subDays, startOfDay, endOfDay } from 'date-fns';
 import { DashboardMetrics, OrdersByDate, TopCustomer } from '../types';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onSyncStart?: () => void;
+  onSyncComplete?: (success: boolean, time: Date) => void;
+  syncing?: boolean;
+}
+
+export interface DashboardRef {
+  triggerSync: () => Promise<boolean>;
+}
+
+// Define the Dashboard component with ForwardRef
+function Dashboard(props: DashboardProps, ref: React.RefObject<DashboardRef> | ((instance: DashboardRef | null) => void) | null) {
+  const { onSyncStart, onSyncComplete, syncing: externalSyncing } = props;
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [ordersByDate, setOrdersByDate] = useState<OrdersByDate[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [loading, setLoading] = useState(true);
+  // Use external syncing state if provided, otherwise use local state
+  const [internalSyncing, setInternalSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  
+  // Determine which syncing state to use
+  const syncing = externalSyncing !== undefined ? externalSyncing : internalSyncing;
   const [dateRange, setDateRange] = useState({
-    start: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    end: format(new Date(), 'yyyy-MM-dd')
+    start: formatDate(subDays(new Date(), 30), 'yyyy-MM-dd'),
+    end: formatDate(new Date(), 'yyyy-MM-dd')
   });
 
   useEffect(() => {
     fetchDashboardData();
+    // Set initial last sync time
+    setLastSyncTime(new Date());
   }, [dateRange]);
+  
+  // Expose triggerSync method to parent component
+  useImperativeHandle(ref, () => ({
+    triggerSync
+  }));
+  
+  const triggerSync = async () => {
+    try {
+      // Update local state and notify parent component
+      setInternalSyncing(true);
+      if (onSyncStart) onSyncStart();
+      
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/shopify/sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Sync failed');
+      }
+      
+      // Update last sync time
+      const syncTime = new Date();
+      setLastSyncTime(syncTime);
+      
+      // Refresh dashboard data
+      await fetchDashboardData();
+      
+      // Notify parent component of success
+      if (onSyncComplete) onSyncComplete(true, syncTime);
+      
+      // Show success message
+      alert('Sync completed successfully!');
+      return true;
+    } catch (error) {
+      console.error('Failed to trigger sync:', error);
+      
+      // Notify parent component of failure
+      if (onSyncComplete) onSyncComplete(false, new Date());
+      
+      alert(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
+    } finally {
+      setInternalSyncing(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -85,6 +156,25 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sync Status */}
+       <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+         <div>
+           <h2 className="text-lg font-semibold text-gray-900">Shopify Sync Status</h2>
+           <p className="text-sm text-gray-500">
+             {lastSyncTime ? `Last synced: ${formatDate(lastSyncTime, 'MMM d, yyyy h:mm a')}` : 'Never synced'}
+           </p>
+         </div>
+         <button
+           onClick={triggerSync}
+           disabled={syncing}
+           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+             syncing ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'
+           }`}
+         >
+           <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+           <span>{syncing ? 'Syncing...' : 'Sync Now'}</span>
+         </button>
+       </div>
       {/* Date Range Filter */}
       <div className="flex items-center justify-between">
         <div>
@@ -169,12 +259,12 @@ const Dashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
-                  tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                  tickFormatter={(value) => formatDate(new Date(value), 'MMM d')}
                 />
                 <YAxis />
                 <Tooltip 
-                  labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
-                  formatter={[(value: number) => [value, 'Orders']]}
+                  labelFormatter={(value) => formatDate(new Date(value), 'MMM d, yyyy')}
+                  formatter={(value: number) => [value, 'Orders']}
                 />
                 <Area 
                   type="monotone" 
@@ -201,12 +291,12 @@ const Dashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
-                  tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                  tickFormatter={(value) => formatDate(new Date(value), 'MMM d')}
                 />
                 <YAxis tickFormatter={(value) => `$${value}`} />
                 <Tooltip 
-                  labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
-                  formatter={[(value: number) => [formatCurrency(value), 'Revenue']]}
+                  labelFormatter={(value) => formatDate(new Date(value), 'MMM d, yyyy')}
+                  formatter={(value: number) => [formatCurrency(value), 'Revenue']}
                 />
                 <Bar dataKey="revenue" fill="#10B981" />
               </BarChart>
@@ -262,4 +352,5 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+// Export the Dashboard component with forwardRef
+export default forwardRef<DashboardRef, DashboardProps>(Dashboard);

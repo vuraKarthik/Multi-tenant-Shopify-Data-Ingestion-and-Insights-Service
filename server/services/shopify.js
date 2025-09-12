@@ -23,7 +23,7 @@ export const testShopifyConnection = async (shopDomain, accessToken) => {
 // Sync all Shopify data for a tenant
 export const syncShopifyData = async (tenantId) => {
   try {
-    console.log(`🔄 Starting sync for tenant: ${tenantId}`);
+    console.log(`=> Starting sync for tenant: ${tenantId}`);
     
     // Get tenant info
     const { data: tenant, error: tenantError } = await supabase
@@ -55,6 +55,7 @@ export const syncShopifyData = async (tenantId) => {
 // Sync customers from Shopify
 const syncCustomers = async (tenant) => {
   try {
+    console.log(`Fetching customers for shop: ${tenant.shop_domain}`);
     const response = await axios.get(`https://${tenant.shop_domain}/admin/api/2023-10/customers.json`, {
       headers: {
         'X-Shopify-Access-Token': tenant.access_token
@@ -62,6 +63,7 @@ const syncCustomers = async (tenant) => {
     });
 
     const customers = response.data.customers;
+    console.log(`API Response received with ${customers?.length || 0} customers`);
     
     for (const customer of customers) {
       const customerData = {
@@ -93,12 +95,19 @@ const syncCustomers = async (tenant) => {
     console.log(`✅ Synced ${customers.length} customers`);
   } catch (error) {
     console.error('Customer sync failed:', error.message);
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      shopDomain: tenant.shop_domain
+    });
   }
 };
 
 // Sync products from Shopify
 const syncProducts = async (tenant) => {
   try {
+    console.log(`Fetching products for shop: ${tenant.shop_domain}`);
     const response = await axios.get(`https://${tenant.shop_domain}/admin/api/2023-10/products.json`, {
       headers: {
         'X-Shopify-Access-Token': tenant.access_token
@@ -106,6 +115,7 @@ const syncProducts = async (tenant) => {
     });
 
     const products = response.data.products;
+    console.log(`API Response received with ${products?.length || 0} products`);
     
     for (const product of products) {
       // Get first variant for pricing info
@@ -140,12 +150,19 @@ const syncProducts = async (tenant) => {
     console.log(`✅ Synced ${products.length} products`);
   } catch (error) {
     console.error('Product sync failed:', error.message);
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      shopDomain: tenant.shop_domain
+    });
   }
 };
 
 // Sync orders from Shopify
 const syncOrders = async (tenant) => {
   try {
+    console.log(`Fetching orders for shop: ${tenant.shop_domain}`);
     const response = await axios.get(`https://${tenant.shop_domain}/admin/api/2023-10/orders.json`, {
       headers: {
         'X-Shopify-Access-Token': tenant.access_token
@@ -153,6 +170,7 @@ const syncOrders = async (tenant) => {
     });
 
     const orders = response.data.orders;
+    console.log(`API Response received with ${orders?.length || 0} orders`);
     
     for (const order of orders) {
       const orderData = {
@@ -183,5 +201,11 @@ const syncOrders = async (tenant) => {
     console.log(`✅ Synced ${orders.length} orders`);
   } catch (error) {
     console.error('Order sync failed:', error.message);
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      shopDomain: tenant.shop_domain
+    });
   }
 };
