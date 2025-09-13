@@ -26,6 +26,7 @@ import {
 } from 'recharts';
 import { format as formatDate, subDays, parseISO } from 'date-fns';
 import { Product } from '../types';
+import { fetchFromApi } from '../utils/api';
 
 interface ProductMetrics {
   totalProducts: number;
@@ -64,39 +65,18 @@ const Products: React.FC = () => {
   const fetchProductsData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       // Fetch metrics data
-      const metricsResponse = await fetch('/api/products/metrics', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const metricsData = await metricsResponse.json();
+      const metricsData = await fetchFromApi<ProductMetrics>('/products/metrics');
       
       // Fetch products by category data
-      const productsByCategoryResponse = await fetch('/api/products/products-by-category', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const productsByCategoryData = await productsByCategoryResponse.json();
+      const productsByCategoryData = await fetchFromApi<ProductsByCategory[]>('/products/products-by-category');
       
       // Fetch top products data
-      const topProductsResponse = await fetch('/api/products/top-products', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const topProductsData = await topProductsResponse.json();
+      const topProductsData = await fetchFromApi<ProductPerformance[]>('/products/top-products');
       
       // Fetch recent products data
-      const recentProductsResponse = await fetch('/api/products/recent-products', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const recentProductsData = await recentProductsResponse.json();
+      const recentProductsData = await fetchFromApi<Product[]>('/products/recent-products');
 
       setMetrics(metricsData);
       setProductsByCategory(productsByCategoryData);

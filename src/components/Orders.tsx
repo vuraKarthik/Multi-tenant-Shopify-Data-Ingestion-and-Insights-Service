@@ -26,6 +26,7 @@ import {
 } from 'recharts';
 import { format as formatDate, subDays, parseISO } from 'date-fns';
 import { Order } from '../types';
+import { fetchFromApi } from '../utils/api';
 
 interface OrderMetrics {
   totalOrders: number;
@@ -64,39 +65,20 @@ const Orders: React.FC = () => {
   const fetchOrdersData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       // Fetch metrics data
-      const metricsResponse = await fetch('/api/orders/metrics', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const metricsData = await metricsResponse.json();
+      const metricsData = await fetchFromApi<OrderMetrics>('/orders/metrics');
       
       // Fetch orders by date data
-      const ordersByDateResponse = await fetch(`/api/orders/orders-by-date?start=${dateRange.start}&end=${dateRange.end}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const ordersByDateData = await ordersByDateResponse.json();
+      const ordersByDateData = await fetchFromApi<OrdersByDate[]>(
+        `/orders/orders-by-date?start=${dateRange.start}&end=${dateRange.end}`
+      );
       
       // Fetch order statuses data
-      const orderStatusesResponse = await fetch('/api/orders/order-statuses', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const orderStatusesData = await orderStatusesResponse.json();
+      const orderStatusesData = await fetchFromApi<OrderStatus[]>('/orders/order-statuses');
       
       // Fetch recent orders data
-      const recentOrdersResponse = await fetch('/api/orders/recent-orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const recentOrdersData = await recentOrdersResponse.json();
+      const recentOrdersData = await fetchFromApi<Order[]>('/orders/recent-orders');
 
       setMetrics(metricsData);
       setOrdersByDate(ordersByDateData);

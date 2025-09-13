@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 import { format as formatDate, subDays, parseISO } from 'date-fns';
 import { Customer } from '../types';
+import { fetchFromApi } from '../utils/api';
 
 interface CustomerMetrics {
   totalCustomers: number;
@@ -61,39 +62,20 @@ const Customers: React.FC = () => {
   const fetchCustomersData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       // Fetch metrics data
-      const metricsResponse = await fetch('/api/customers/metrics', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const metricsData = await metricsResponse.json();
+      const metricsData = await fetchFromApi<CustomerMetrics>('/customers/metrics');
       
       // Fetch customers by date data
-      const customersByDateResponse = await fetch(`/api/customers/customers-by-date?start=${dateRange.start}&end=${dateRange.end}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const customersByDateData = await customersByDateResponse.json();
+      const customersByDateData = await fetchFromApi<CustomersByDate[]>(
+        `/customers/customers-by-date?start=${dateRange.start}&end=${dateRange.end}`
+      );
       
       // Fetch customer segments data
-      const customerSegmentsResponse = await fetch('/api/customers/customer-segments', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const customerSegmentsData = await customerSegmentsResponse.json();
+      const customerSegmentsData = await fetchFromApi<CustomerSegment[]>('/customers/customer-segments');
       
       // Fetch top customers data
-      const topCustomersResponse = await fetch('/api/customers/top-customers', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const topCustomersData = await topCustomersResponse.json();
+      const topCustomersData = await fetchFromApi<Customer[]>('/customers/top-customers');
 
       setMetrics(metricsData);
       setCustomersByDate(customersByDateData);

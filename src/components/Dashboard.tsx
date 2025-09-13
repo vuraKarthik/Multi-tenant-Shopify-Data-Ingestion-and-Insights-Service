@@ -26,6 +26,7 @@ import {
 } from 'recharts';
 import { format as formatDate, subDays, startOfDay, endOfDay } from 'date-fns';
 import { DashboardMetrics, OrdersByDate, TopCustomer } from '../types';
+import { fetchFromApi } from '../utils/api';
 
 interface DashboardProps {
   onSyncStart?: () => void;
@@ -73,18 +74,7 @@ function Dashboard(props: DashboardProps, ref: React.RefObject<DashboardRef> | (
       setInternalSyncing(true);
       if (onSyncStart) onSyncStart();
       
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/shopify/sync', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Sync failed');
-      }
+      const data = await fetchFromApi('/shopify/sync', { method: 'POST' });
       
       // Update last sync time
       const syncTime = new Date();
@@ -115,26 +105,20 @@ function Dashboard(props: DashboardProps, ref: React.RefObject<DashboardRef> | (
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
-      const [metricsRes, ordersRes, customersRes] = await Promise.all([
-        fetch('/api/dashboard/metrics', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(`/api/dashboard/orders-by-date?start=${dateRange.start}&end=${dateRange.end}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch('/api/dashboard/top-customers', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
-
-      const [metricsData, ordersData, customersData] = await Promise.all([
-        metricsRes.json(),
-        ordersRes.json(),
-        customersRes.json()
-      ]);
-
+      // Fetch metrics data
+      const metricsData = await fetchFromApi<DashboardMetrics>(
+        `/dashboard/metrics?start=${dateRange.start}&end=${dateRange.end}`
+      );
+      
+      // Fetch orders by date data
+      const ordersData = await fetchFromApi<OrdersByDate[]>(
+        `/dashboard/orders-by-date?start=${dateRange.start}&end=${dateRange.end}`
+      );
+      
+      // Fetch top customers data
+      const customersData = await fetchFromApi<TopCustomer[]>('/dashboard/top-customers');
+      
       setMetrics(metricsData);
       setOrdersByDate(ordersData);
       setTopCustomers(customersData);

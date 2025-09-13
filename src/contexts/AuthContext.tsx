@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthUser } from '../types';
+import { fetchFromApi } from '../utils/api';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -27,10 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('token');
     if (token) {
       // Verify token with backend
-      fetch('/api/auth/verify', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => res.json())
+      fetchFromApi<{ user: AuthUser }>('/auth/verify')
       .then(data => {
         if (data.user) {
           setUser(data.user);
@@ -46,35 +44,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const data = await fetchFromApi<{ token: string; user: AuthUser }>('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Login failed');
     }
-
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
   };
 
   const register = async (email: string, password: string, shopDomain: string, accessToken: string) => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, shopDomain, accessToken })
-    });
+    try {
+      const data = await fetchFromApi<{ token: string; user: AuthUser }>('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, shopDomain, accessToken })
+      });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Registration failed');
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Registration failed');
     }
-
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
   };
 
   const logout = () => {
