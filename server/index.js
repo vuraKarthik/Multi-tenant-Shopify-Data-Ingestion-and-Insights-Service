@@ -24,12 +24,11 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://multi-tenant-shopify-data-ingestion-and.onrender.com' 
-  ],
-  credentials: true
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://multi-tenant-shopify.vercel.app']
+    : ['http://localhost:5173']
 }));
+app.use(express.json());
 
 
 // Routes
