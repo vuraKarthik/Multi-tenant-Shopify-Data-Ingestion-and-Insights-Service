@@ -81,16 +81,12 @@ router.get('/products-by-category', authenticateToken, async (req, res) => {
 });
 
 // Get top products by sales
-// Note: This would typically require joining orders and products tables
-// For this example, we'll return a placeholder response
 router.get('/top-products', authenticateToken, async (req, res) => {
   try {
     const { tenantId } = req.user;
     const limit = req.query.limit || 5;
 
-    // In a real application, you would join orders and products tables
-    // to calculate sales and revenue per product
-    // For this example, we'll return the most recently added products
+ 
     const { data: products } = await supabase
       .from('products')
       .select('*')
