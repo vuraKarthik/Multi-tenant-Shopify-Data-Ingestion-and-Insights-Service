@@ -5,14 +5,10 @@
  * In production, this will be the actual API URL
  */
 export const getApiUrl = (): string => {
-  // In development, we use relative URLs which will be proxied by Vite
-  // In production, we use the environment variable
   return import.meta.env.VITE_API_URL || 'http://localhost:3001';
 };
 
-/**
- * Create headers with authentication token
- */
+
 export const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('token');
   return {
@@ -21,9 +17,9 @@ export const getAuthHeaders = (): HeadersInit => {
   };
 };
 
-/**
- * Fetch data from API with authentication
- */
+
+ // Fetch data from API with authentication
+ 
 export const fetchFromApi = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const url = `${getApiUrl()}${endpoint}`;
   const headers = {
