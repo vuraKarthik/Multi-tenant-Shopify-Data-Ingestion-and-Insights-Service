@@ -138,8 +138,6 @@ The application runs on:
 
 ### Webhook Integration
 - Real-time updates for orders, customers, products
-- Webhook verification for security
-- Automatic data refresh on changes
 
 ## 🛡️ Security Features
 
