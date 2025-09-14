@@ -1,21 +1,5 @@
-/*
-  # Multi-tenant Shopify Data Schema
+-- Multi-tenant Shopify Data Schema
 
-  1. New Tables
-    - `tenants` - Stores Shopify shop information and credentials
-    - `customers` - Customer data from Shopify stores  
-    - `orders` - Order data from Shopify stores
-    - `products` - Product data from Shopify stores
-    
-  2. Security
-    - Enable RLS on all tables
-    - Add policies for tenant isolation
-    - Ensure data is properly scoped by tenant_id
-    
-  3. Indexes
-    - Add indexes for efficient querying and date filtering
-    - Optimize for dashboard analytics queries
-*/
 
 -- Create tenants table
 CREATE TABLE IF NOT EXISTS tenants (
